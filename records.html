@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日记录系统 - 记录页</title>
+
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <link rel="stylesheet" href="static/styles.css">
+</head>
+
+<body>
+
+    <header id="header">
+        <div style="display:flex; align-items:center; gap:12px; width:100%; max-width:1100px; justify-content:space-between;">
+            <div style="font-weight:bold; font-size:18px;">Chen.のhomepage</div>
+            <div>
+                <a href="index.html" class="nav-btn">返回首页</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>🔥 每日记录（独立页面）</h1>
+    </section>
+
+    <div class="daily-record-container">
+        <div class="date-display">
+            <span id="currentDate"></span>
+            <button class="btn btn-warning" onclick="goToToday()">📅 今天</button>
+            <button class="btn btn-primary" onclick="previousDay()">← 前一天</button>
+            <button class="btn btn-primary" onclick="nextDay()">后一天 →</button>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-success" onclick="saveRecord()">💾 保存</button>
+            <button class="btn btn-primary" onclick="exportRecord()">📥 导出纯文本</button>
+            <button class="btn btn-warning" onclick="startFocusMode()">🎯 专注模式</button>
+        </div>
+
+        <div class="section-title">🏷️ 关键词（可选）</div>
+        <div class="input-group">
+            <input type="text" id="keywordInput" placeholder="输入关键词，按回车添加" onkeypress="if(event.key==='Enter') addKeyword()">
+            <button class="btn btn-primary" onclick="addKeyword()">添加</button>
+        </div>
+        <div class="keywords-container" id="keywordsContainer"></div>
+
+        <div class="section-title">✅ 今天做了什么</div>
+        <textarea id="todayDone" placeholder="记录今天完成的事项..."></textarea>
+
+        <div class="section-title">📋 明天打算做</div>
+        <div class="input-group">
+            <input type="text" id="tomorrowInput" placeholder="输入明天的计划，按回车添加" onkeypress="if(event.key==='Enter') addTomorrowPlan()">
+            <button class="btn btn-primary" onclick="addTomorrowPlan()">添加</button>
+            <button class="btn btn-primary" onclick="suggestPlans()">🤖 AI建议</button>
+        </div>
+        <ul class="tomorrow-list" id="tomorrowList"></ul>
+        <div id="aiSuggestions" class="ai-suggestions" style="display:none;">
+            <h4>AI建议的明天计划：</h4>
+            <ul class="ai-suggestions-list" id="suggestionsList"></ul>
+        </div>
+
+        <div class="section-title">📝 待办清单 (To-Do List)</div>
+        <div class="input-group">
+            <input type="text" id="todoInput" placeholder="添加待办项目" onkeypress="if(event.key==='Enter') addTodo()">
+            <button class="btn btn-primary" onclick="addTodo()">添加</button>
+        </div>
+        <ul class="todo-list" id="todoList"></ul>
+
+        <div class="section-title">💭 感悟（可选）</div>
+        <textarea id="insights" placeholder="记录今天的感悟、思考或反思..."></textarea>
+
+        <div class="section-title">⏱️ 专注模式统计</div>
+        <div class="stats-panel">
+            <div class="stat-item">
+                <span class="stat-label">今日专注总时长：</span>
+                <span class="stat-value" id="totalFocusTime">0 分钟</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">专注次数：</span>
+                <span class="stat-value" id="focusCount">0 次</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">平均专注时长：</span>
+                <span class="stat-value" id="avgFocusTime">0 分钟</span>
+            </div>
+            <div id="focusSessions" style="margin-top: 15px;"></div>
+        </div>
+
+        <div class="btn-group" style="margin-top: 30px;">
+            <button class="btn btn-success" onclick="saveRecord()">💾 保存所有更改</button>
+            <button class="btn btn-primary" onclick="exportRecord()">📥 导出为纯文本</button>
+        </div>
+    </div>
+
+    <!-- 专注模式窗口 -->
+    <div class="focus-mode" id="focusMode">
+        <button class="btn btn-danger" style="position: absolute; top: 20px; right: 20px;" onclick="exitFocusMode()">退出 (ESC)</button>
+        <div class="focus-task" id="focusTask">聚焦任务</div>
+        <div class="focus-timer" id="focusTimer">25:00</div>
+        <div class="focus-controls">
+            <button class="btn btn-success" onclick="startTimer()">▶ 开始</button>
+            <button class="btn btn-warning" onclick="pauseTimer()">⏸ 暂停</button>
+            <button class="btn btn-danger" onclick="resetTimer()">🔄 重置</button>
+        </div>
+        <div class="focus-stats">
+            <div>✅ 今天专注总时长: <span id="focusStatTotal">0</span> 分钟</div>
+            <div>📊 本次专注: <span id="focusStatCurrent">0</span> 分钟</div>
+        </div>
+    </div>
+
+    <script src="static/data.js"></script>
+    <script>
+        let currentDate = new Date();
+        let focusTimer = null;
+        let focusSeconds = 0;
+        let focusInitialSeconds = 25 * 60;
+        let isTimerRunning = false;
+        let currentFocusTask = '';
+
+        // 初始化
+        function init() {
+            goToToday();
+        }
+
+        // 日期导航
+        function goToToday() {
+            currentDate = new Date();
+            loadRecord();
+        }
+
+        function previousDay() {
+            currentDate.setDate(currentDate.getDate() - 1);
+            loadRecord();
+        }
+
+        function nextDay() {
+            currentDate.setDate(currentDate.getDate() + 1);
+            loadRecord();
+        }
+
+        function getDateString() {
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const day = String(currentDate.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function updateDateDisplay() {
+            const dateStr = getDateString();
+            const weekday = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][currentDate.getDay()];
+            document.getElementById('currentDate').textContent = `📅 ${dateStr} (${weekday})`;
+        }
+
+        // 加载和保存
+        function loadRecord() {
+            updateDateDisplay();
+            const dateStr = getDateString();
+            const data = getRecord(dateStr);
+
+            document.getElementById('keywordsContainer').innerHTML = '';
+            data.keywords.forEach(k => addKeywordUI(k));
+
+            document.getElementById('todayDone').value = data.today_done || '';
+            document.getElementById('insights').value = data.insights || '';
+
+            document.getElementById('tomorrowList').innerHTML = '';
+            (data.tomorrow_plan || []).forEach(p => addTomorrowPlanUI(p));
+
+            document.getElementById('todoList').innerHTML = '';
+            (data.todos || []).forEach(todo => addTodoUI(todo));
+
+            updateFocusStats(data.focus_sessions || []);
+        }
+
+        function saveRecord() {
+            const dateStr = getDateString();
+            const keywords = Array.from(document.querySelectorAll('.keyword-tag')).map(el =>
+                el.textContent.replace('✕', '').trim()
+            );
+            const tomorrowPlans = Array.from(document.querySelectorAll('.tomorrow-item .tomorrow-text')).map(el =>
+                el.textContent.trim()
+            );
+            const todos = Array.from(document.querySelectorAll('.todo-item')).map(el => ({
+                text: el.querySelector('.todo-text').textContent.trim(),
+                completed: el.querySelector('input[type="checkbox"]').checked
+            }));
+
+            const data = {
+                date: dateStr,
+                keywords: keywords,
+                today_done: document.getElementById('todayDone').value,
+                tomorrow_plan: tomorrowPlans,
+                insights: document.getElementById('insights').value,
+                todos: todos,
+                focus_sessions: window.focusSessions || []
+            };
+
+            saveRecordData(dateStr, data);
+            alert('✅ 保存成功！');
+        }
+
+        // 关键词管理
+        function addKeyword() {
+            const input = document.getElementById('keywordInput');
+            if (input.value.trim()) {
+                addKeywordUI(input.value.trim());
+                input.value = '';
+            }
+        }
+
+        function addKeywordUI(keyword) {
+            const container = document.getElementById('keywordsContainer');
+            const tag = document.createElement('div');
+            tag.className = 'keyword-tag';
+            tag.innerHTML = `${keyword} <button onclick="this.parentElement.remove()">✕</button>`;
+            container.appendChild(tag);
+        }
+
+        // 明天计划管理
+        function addTomorrowPlan() {
+            const input = document.getElementById('tomorrowInput');
+            if (input.value.trim()) {
+                addTomorrowPlanUI(input.value.trim());
+                input.value = '';
+            }
+        }
+
+        function addTomorrowPlanUI(plan) {
+            const list = document.getElementById('tomorrowList');
+            const item = document.createElement('li');
+            item.className = 'tomorrow-item';
+            item.innerHTML = `
+            <div class="tomorrow-text">${plan}</div>
+            <button class="btn-remove" onclick="this.parentElement.remove()">删除</button>
+        `;
+            list.appendChild(item);
+        }
+
+        function suggestPlans() {
+            const todayDone = document.getElementById('todayDone').value;
+            if (!todayDone.trim()) {
+                alert('请先填写今天做了什么，AI才能给出建议！');
+                return;
+            }
+
+            const suggestions = generatePlanSuggestions(todayDone);
+            const suggestionsList = document.getElementById('suggestionsList');
+            suggestionsList.innerHTML = '';
+
+            suggestions.forEach(s => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span onclick="addTomorrowPlanUI('${s.replace(/'/g, "\\'")}'); document.getElementById('aiSuggestions').style.display='none';" style="cursor:pointer; color:#28a745; font-weight:bold;">${s}</span>`;
+                suggestionsList.appendChild(li);
+            });
+
+            document.getElementById('aiSuggestions').style.display = 'block';
+        }
+
+        function generatePlanSuggestions(todayDone) {
+            const suggestions = [];
+
+            if (todayDone.includes('会议') || todayDone.includes('讨论')) {
+                suggestions.push('整理会议要点和行动项');
+            }
+            if (todayDone.includes('代码') || todayDone.includes('开发')) {
+                suggestions.push('复审代码并完成单元测试');
+            }
+            if (todayDone.includes('学习')) {
+                suggestions.push('复习今天学习的内容');
+            }
+            if (todayDone.includes('阅读')) {
+                suggestions.push('总结阅读笔记');
+            }
+
+            suggestions.push('计划明天的重点任务');
+            suggestions.push('检查邮件和待办事项');
+            suggestions.push('准备明天的会议');
+
+            return suggestions.slice(0, 5);
+        }
+
+        // 待办清单管理
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            if (input.value.trim()) {
+                addTodoUI({
+                    text: input.value.trim(),
+                    completed: false
+                });
+                input.value = '';
+            }
+        }
+
+        function addTodoUI(todo) {
+            const list = document.getElementById('todoList');
+            const item = document.createElement('li');
+            item.className = 'todo-item' + (todo.completed ? ' completed' : '');
+            item.innerHTML = `
+            <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="this.parentElement.classList.toggle('completed')">
+            <div class="todo-text">${todo.text}</div>
+            <button class="btn-remove" onclick="this.parentElement.remove()">删除</button>
+        `;
+            list.appendChild(item);
+        }
+
+        // 专注模式
+        function startFocusMode() {
+            const input = prompt('输入本次专注的任务：');
+            if (input !== null) {
+                currentFocusTask = input || '专注工作';
+                document.getElementById('focusTask').textContent = currentFocusTask;
+                focusSeconds = focusInitialSeconds;
+                updateFocusDisplay();
+                document.getElementById('focusMode').classList.add('active');
+                document.addEventListener('keydown', handleFocusKeydown);
+            }
+        }
+
+        function exitFocusMode() {
+            document.getElementById('focusMode').classList.remove('active');
+            document.removeEventListener('keydown', handleFocusKeydown);
+            if (focusTimer) clearInterval(focusTimer);
+            isTimerRunning = false;
+
+            if (focusSeconds < focusInitialSeconds) {
+                const duration = Math.round((focusInitialSeconds - focusSeconds) / 60);
+                if (duration > 0) {
+                    if (!window.focusSessions) window.focusSessions = [];
+                    window.focusSessions.push({
+                        task: currentFocusTask,
+                        duration: duration,
+                        timestamp: new Date().toLocaleTimeString()
+                    });
+                    updateFocusStats(window.focusSessions);
+                }
+            }
+        }
+
+        function handleFocusKeydown(e) {
+            if (e.key === 'Escape') exitFocusMode();
+        }
+
+        function startTimer() {
+            if (isTimerRunning) return;
+            isTimerRunning = true;
+            focusTimer = setInterval(() => {
+                focusSeconds--;
+                updateFocusDisplay();
+                if (focusSeconds <= 0) {
+                    clearInterval(focusTimer);
+                    alert('⏰ 专注时间结束！');
+                    isTimerRunning = false;
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(focusTimer);
+            isTimerRunning = false;
+        }
+
+        function resetTimer() {
+            clearInterval(focusTimer);
+            focusSeconds = focusInitialSeconds;
+            isTimerRunning = false;
+            updateFocusDisplay();
+        }
+
+        function updateFocusDisplay() {
+            const minutes = Math.floor(focusSeconds / 60);
+            const seconds = focusSeconds % 60;
+            document.getElementById('focusTimer').textContent =
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            if (window.focusSessions) {
+                const total = window.focusSessions.reduce((sum, s) => sum + s.duration, 0);
+                const currentSession = Math.round((focusInitialSeconds - focusSeconds) / 60);
+                document.getElementById('focusStatTotal').textContent = total;
+                document.getElementById('focusStatCurrent').textContent = currentSession;
+            }
+        }
+
+        function updateFocusStats(sessions) {
+            window.focusSessions = sessions;
+            const total = sessions.reduce((sum, s) => sum + s.duration, 0);
+            const avg = sessions.length > 0 ? Math.round(total / sessions.length) : 0;
+
+            document.getElementById('totalFocusTime').textContent = `${total} 分钟`;
+            document.getElementById('focusCount').textContent = `${sessions.length} 次`;
+            document.getElementById('avgFocusTime').textContent = `${avg} 分钟`;
+
+            const sessionsHTML = sessions.map(s =>
+                `<div style="padding:8px; background:#f0f0f0; margin:5px 0; border-radius:3px;">
+                🕐 ${s.timestamp} - ${s.task} (${s.duration}分钟)
+            </div>`
+            ).join('');
+            document.getElementById('focusSessions').innerHTML = sessionsHTML || '';
+        }
+
+        // 导出功能
+        function exportRecord() {
+            const dateStr = getDateString();
+            const data = getRecord(dateStr);
+
+            let text = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 每日记录 - ${data.date}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+`;
+
+            if (data.keywords && data.keywords.length > 0) {
+                text += `🏷️  关键词: ${data.keywords.join(', ')}\n\n`;
+            }
+
+            text += `✅ 今天做了什么:
+${data.today_done || ''}
+
+📋 明天打算做:
+`;
+
+            (data.tomorrow_plan || []).forEach((plan, i) => {
+                text += `  ${i + 1}. ${plan}\n`;
+            });
+
+            if (data.insights) {
+                text += `\n💭 感悟:\n${data.insights}\n`;
+            }
+
+            if (data.focus_sessions && data.focus_sessions.length > 0) {
+                const total = data.focus_sessions.reduce((sum, s) => sum + s.duration, 0);
+                text += `\n⏱️  今日专注时长: ${total}分钟\n`;
+                text += '📊 专注记录:\n';
+                data.focus_sessions.forEach(session => {
+                    text += `  • ${session.duration}分钟 - ${session.task}\n`;
+                });
+            }
+
+            text += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+
+            // 创建下载链接
+            const blob = new Blob([text], {
+                type: 'text/plain;charset=utf-8'
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `record_${dateStr}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // 启动应用
+        init();
+    </script>
+
+</body>
+
+</html>

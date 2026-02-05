@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页 - Chen.のhomepage</title>
+
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <link rel="stylesheet" href="static/styles.css">
+</head>
+
+<body>
+
+    <header id="header">
+        <div style="display:flex; align-items:center; gap:12px; width:100%; max-width:1100px; justify-content:space-between;">
+            <div style="font-weight:bold; font-size:18px;">Chen.のhomepage</div>
+            <div>
+                <a href="records.html" class="nav-btn">进入记录页</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>🔥 欢迎来到Chen.のhomepage</h1>
+    </section>
+
+    <div class="content">
+        <h2 style="color:white; text-align:center; margin-top:30px;">打卡时间数（像 GitHub 贡献图）</h2>
+        <div id="heatmapContainer" class="heatmap"></div>
+        <div class="heat-legend">
+            <span>少</span>
+            <div class="legend-blocks">
+                <div class="legend-cell level-0"></div>
+                <div class="legend-cell level-1"></div>
+                <div class="legend-cell level-2"></div>
+                <div class="legend-cell level-3"></div>
+                <div class="legend-cell level-4"></div>
+            </div>
+            <span>多</span>
+        </div>
+    </div>
+
+    <!-- 快速导航（滚动后显示） -->
+    <div class="content">
+        <h2 style="color:white; text-align:center; margin-top:30px;">快速导航</h2>
+        <div id="quicknavContainer" class="quicknav-container"></div>
+    </div>
+
+    <script src="static/data.js"></script>
+    <script>
+        // 渲染简单的 GitHub 风格热图（最近 52 周）
+        async function renderHeatmap() {
+            const counts = getHeatmapData();
+
+            const container = document.getElementById('heatmapContainer');
+            container.innerHTML = '';
+            const today = new Date();
+            // 以周为列，52 列，每列 7 天
+            const weeks = 52;
+            const oneDay = 24 * 60 * 60 * 1000;
+
+            const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+            for (let w = weeks - 1; w >= 0; w--) {
+                const col = document.createElement('div');
+                col.className = 'heat-col';
+                for (let d = 6; d >= 0; d--) {
+                    const cell = document.createElement('div');
+                    cell.className = 'heat-cell level-0';
+                    const dayOffset = w * 7 + d;
+                    const date = new Date(endDate.getTime() - dayOffset * oneDay);
+                    const y = date.getFullYear();
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const key = `${y}-${m}-${day}`;
+                    const value = counts[key] || 0;
+                    let lvl = 0;
+                    if (value >= 4) lvl = 4;
+                    else if (value >= 3) lvl = 3;
+                    else if (value >= 2) lvl = 2;
+                    else if (value >= 1) lvl = 1;
+                    cell.className = 'heat-cell level-' + lvl;
+                    cell.title = `${key}: ${value}`;
+                    col.appendChild(cell);
+                }
+                container.appendChild(col);
+            }
+        }
+
+        // 仅在用户滚动后显示热图容器与快速导航（与 header 一致的显示逻辑）
+        function setupScrollReveal() {
+            const heat = document.getElementById('heatmapContainer');
+            const quick = document.getElementById('quicknavContainer');
+            if (heat) heat.style.opacity = 0;
+            if (quick) quick.style.opacity = 0;
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                const windowH = window.innerHeight;
+                let opacity = Math.min(1, Math.max(0, (scrollY - windowH / 2) / (windowH / 2)));
+                if (heat) heat.style.opacity = opacity;
+                if (quick) quick.style.opacity = opacity;
+            });
+        }
+
+        // --- 快速导航逻辑 ---
+        function getDomain(url) {
+            try {
+                const u = new URL(url);
+                return u.hostname;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function loadQuickNav() {
+            const links = getQuickNav();
+            renderQuickNav(links);
+        }
+
+        function renderQuickNav(links) {
+            const container = document.getElementById('quicknavContainer');
+            container.innerHTML = '';
+            const grid = document.createElement('div');
+            grid.className = 'quicknav-grid';
+
+            // render links
+            links.forEach((item, idx) => {
+                const cell = document.createElement('a');
+                cell.className = 'quicknav-item';
+                cell.href = item.url;
+                cell.target = '_blank';
+                cell.rel = 'noopener noreferrer';
+
+                const img = document.createElement('img');
+                img.className = 'quicknav-icon';
+                img.src = item.icon || (`https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(item.url)}`);
+                img.alt = item.title || item.url;
+
+                const label = document.createElement('div');
+                label.className = 'quicknav-label';
+                label.textContent = item.title || getDomain(item.url) || item.url;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'quicknav-remove';
+                removeBtn.title = '删除';
+                removeBtn.textContent = '✕';
+                removeBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    links.splice(idx, 1);
+                    saveQuickNav(links);
+                    renderQuickNav(links);
+                });
+
+                cell.appendChild(img);
+                cell.appendChild(label);
+                cell.appendChild(removeBtn);
+                grid.appendChild(cell);
+            });
+
+            // add-slot (保留一个位置作为添加按钮)
+            const addCell = document.createElement('div');
+            addCell.className = 'quicknav-item add-item';
+            addCell.title = '添加网址';
+            addCell.addEventListener('click', () => {
+                const url = prompt('输入要添加的网址（含 https://)');
+                if (!url) return;
+                const title = prompt('可选：为该链接设置标题（留空则使用域名）') || '';
+                const domain = getDomain(url);
+                const icon = domain ? `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(url)}` : '';
+                links.push({
+                    url,
+                    title,
+                    icon
+                });
+                saveQuickNav(links);
+                renderQuickNav(links);
+            });
+            const plus = document.createElement('div');
+            plus.className = 'add-plus';
+            plus.textContent = '+';
+            addCell.appendChild(plus);
+            grid.appendChild(addCell);
+
+            container.appendChild(grid);
+        }
+
+        renderHeatmap();
+        setupScrollReveal();
+        loadQuickNav();
+
+        // 初始化 header 为隐藏状态
+        const header = document.getElementById("header");
+        const hero = document.querySelector(".hero");
+        if (header) header.style.opacity = 0;
+
+        window.addEventListener("scroll", () => {
+            const scrollY = window.scrollY;
+            const windowH = window.innerHeight;
+
+            if (hero) {
+                let heroOpacity = Math.max(0, 1 - scrollY / windowH);
+                hero.style.opacity = heroOpacity;
+            }
+
+            if (header) {
+                let headerOpacity = Math.min(1, Math.max(0, (scrollY - windowH / 2) / (windowH / 2)));
+                header.style.opacity = headerOpacity;
+            }
+        });
+    </script>
+
+</body>
+
+</html>
