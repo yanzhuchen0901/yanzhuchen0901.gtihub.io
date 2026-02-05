@@ -35,12 +35,14 @@
 
 ### Flask 模板语法 → 纯 HTML
 **转换前**：
+{% raw %}
 ```html
 {% extends "base.html" %}
 {% block title %}首页{% endblock %}
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v={{ v }}">
 ```
+{% endraw %}
 
 **转换后**：
 ```html
