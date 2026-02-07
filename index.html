@@ -10,6 +10,8 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
 
+    <link rel="stylesheet" href="static/header.css">
+    <link rel="stylesheet" href="static/hero.css">
     <link rel="stylesheet" href="static/styles.css">
 </head>
 
@@ -20,12 +22,19 @@
             <div style="font-weight:bold; font-size:18px;">Chen.のhomepage</div>
             <div>
                 <a href="records.html" class="nav-btn">进入记录页</a>
+                <a href="https://yanzhuchen0901.github.io/notes/" class="nav-btn" target="_blank" rel="noopener noreferrer">笔记</a>
             </div>
         </div>
     </header>
 
     <section class="hero">
-        <h1>🔥 欢迎来到Chen.のhomepage</h1>
+        <div class="hero-content">
+            <h1 class="greeting">🔥 欢迎来到Chen.のhomepage</h1>
+            <div class="typed-wrapper">
+                <span id="typed" class="typed-text"></span>
+                <span class="cursor" aria-hidden="true"></span>
+            </div>
+        </div>
     </section>
 
     <div class="content">
@@ -212,6 +221,45 @@
                 header.style.opacity = headerOpacity;
             }
         });
+    </script>
+
+    <script>
+        // 简单打字机循环效果（移动端友好、无外部依赖）
+        (function() {
+            const el = document.getElementById('typed');
+            if (!el) return;
+            const phrases = ["陈彦竹", "Yanzhu Chen", "ZJUer", "CS Learner"];
+            let pi = 0,
+                ci = 0,
+                deleting = false;
+            const typeSpeed = 90,
+                deleteSpeed = 50,
+                pause = 1200;
+
+            function tick() {
+                const full = phrases[pi];
+                if (!deleting) {
+                    ci++;
+                    el.textContent = full.slice(0, ci);
+                    if (ci === full.length) {
+                        deleting = true;
+                        setTimeout(tick, pause);
+                        return;
+                    }
+                } else {
+                    ci--;
+                    el.textContent = full.slice(0, ci);
+                    if (ci === 0) {
+                        deleting = false;
+                        pi = (pi + 1) % phrases.length;
+                    }
+                }
+                setTimeout(tick, deleting ? deleteSpeed : typeSpeed);
+            }
+
+            // start after small delay for nicer entry
+            setTimeout(tick, 400);
+        })();
     </script>
 
 </body>

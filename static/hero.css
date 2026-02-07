@@ -1,0 +1,71 @@
+/* Hero styles and typing animation */
+
+.hero {
+    height: 100vh;
+    background: radial-gradient(ellipse at center, rgba(30, 30, 30, 0.6), rgba(0, 0, 0, 0.9)), url("hero.jpg") center/cover no-repeat;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+}
+
+.hero-content {
+    backdrop-filter: blur(4px);
+    padding: 40px 28px;
+    border-radius: 12px;
+}
+
+.hero .greeting {
+    font-size: 28px;
+    margin: 0 0 10px 0;
+    opacity: 0.95;
+}
+
+.typed-wrapper {
+    font-family: "Courier New", monospace;
+    font-size: 48px;
+    font-weight: 700;
+    color: #fffb;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background: linear-gradient(180deg, #fff, #ddd);
+    animation: blink 1s steps(1) infinite;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    0%,
+    50% {
+        opacity: 1
+    }
+    51%,
+    100% {
+        opacity: 0
+    }
+}
+
+
+/* Smooth fade-in for typed text */
+
+.typed-text {
+    display: inline-block;
+    color: #fff;
+    -webkit-text-stroke: 0.2px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 600px) {
+    .typed-wrapper {
+        font-size: 26px
+    }
+    .hero .greeting {
+        font-size: 18px
+    }
+}
