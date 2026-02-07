@@ -2,7 +2,7 @@
 
 .hero {
     height: 100vh;
-    background: radial-gradient(ellipse at center, rgba(30, 30, 30, 0.6), rgba(0, 0, 0, 0.9)), url("hero.jpg") center/cover no-repeat;
+    background: url("hero.jpg") center/cover no-repeat;
     display: flex;
     justify-content: center;
     align-items: center;
