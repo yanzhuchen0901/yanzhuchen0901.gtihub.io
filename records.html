@@ -21,6 +21,7 @@
             <div style="font-weight:bold; font-size:18px;">Chen.のhomepage</div>
             <div>
                 <a href="index.html" class="nav-btn">返回首页</a>
+                <a href="focus.html" class="nav-btn">专注计时器</a>
                 <a href="https://yanzhuchen0901.github.io/notes/" class="nav-btn" target="_blank" rel="noopener noreferrer">笔记</a>
             </div>
         </div>
@@ -41,7 +42,6 @@
         <div class="btn-group">
             <button class="btn btn-success" onclick="saveRecord()">💾 保存</button>
             <button class="btn btn-primary" onclick="exportRecord()">📥 导出纯文本</button>
-            <button class="btn btn-warning" onclick="startFocusMode()">🎯 专注模式</button>
         </div>
 
         <div class="section-title">🏷️ 关键词（可选）</div>
@@ -99,30 +99,9 @@
         </div>
     </div>
 
-    <!-- 专注模式窗口 -->
-    <div class="focus-mode" id="focusMode">
-        <button class="btn btn-danger" style="position: absolute; top: 20px; right: 20px;" onclick="exitFocusMode()">退出 (ESC)</button>
-        <div class="focus-task" id="focusTask">聚焦任务</div>
-        <div class="focus-timer" id="focusTimer">25:00</div>
-        <div class="focus-controls">
-            <button class="btn btn-success" onclick="startTimer()">▶ 开始</button>
-            <button class="btn btn-warning" onclick="pauseTimer()">⏸ 暂停</button>
-            <button class="btn btn-danger" onclick="resetTimer()">🔄 重置</button>
-        </div>
-        <div class="focus-stats">
-            <div>✅ 今天专注总时长: <span id="focusStatTotal">0</span> 分钟</div>
-            <div>📊 本次专注: <span id="focusStatCurrent">0</span> 分钟</div>
-        </div>
-    </div>
-
     <script src="static/data.js"></script>
     <script>
         let currentDate = new Date();
-        let focusTimer = null;
-        let focusSeconds = 0;
-        let focusInitialSeconds = 25 * 60;
-        let isTimerRunning = false;
-        let currentFocusTask = '';
 
         // 初始化
         function init() {
@@ -263,6 +242,31 @@
             document.getElementById('aiSuggestions').style.display = 'block';
         }
 
+        // 更新专注统计（仅显示，不支持启动计时）
+        function updateFocusStats(sessions) {
+            if (!sessions || sessions.length === 0) {
+                document.getElementById('totalFocusTime').textContent = '0 分钟';
+                document.getElementById('focusCount').textContent = '0 次';
+                document.getElementById('avgFocusTime').textContent = '0 分钟';
+                document.getElementById('focusSessions').innerHTML = '';
+                return;
+            }
+
+            const total = sessions.reduce((sum, s) => sum + s.duration, 0);
+            const avg = Math.round(total / sessions.length);
+
+            document.getElementById('totalFocusTime').textContent = `${total} 分钟`;
+            document.getElementById('focusCount').textContent = `${sessions.length} 次`;
+            document.getElementById('avgFocusTime').textContent = `${avg} 分钟`;
+
+            const sessionsHTML = sessions.map(s =>
+                `<div style="padding:8px; background:#f0f0f0; margin:5px 0; border-radius:3px;">
+                🕐 ${s.timestamp} - ${s.task} (${s.duration}分钟)
+            </div>`
+            ).join('');
+            document.getElementById('focusSessions').innerHTML = sessionsHTML;
+        }
+
         function generatePlanSuggestions(todayDone) {
             const suggestions = [];
 
@@ -308,100 +312,6 @@
             <button class="btn-remove" onclick="this.parentElement.remove()">删除</button>
         `;
             list.appendChild(item);
-        }
-
-        // 专注模式
-        function startFocusMode() {
-            const input = prompt('输入本次专注的任务：');
-            if (input !== null) {
-                currentFocusTask = input || '专注工作';
-                document.getElementById('focusTask').textContent = currentFocusTask;
-                focusSeconds = focusInitialSeconds;
-                updateFocusDisplay();
-                document.getElementById('focusMode').classList.add('active');
-                document.addEventListener('keydown', handleFocusKeydown);
-            }
-        }
-
-        function exitFocusMode() {
-            document.getElementById('focusMode').classList.remove('active');
-            document.removeEventListener('keydown', handleFocusKeydown);
-            if (focusTimer) clearInterval(focusTimer);
-            isTimerRunning = false;
-
-            if (focusSeconds < focusInitialSeconds) {
-                const duration = Math.round((focusInitialSeconds - focusSeconds) / 60);
-                if (duration > 0) {
-                    if (!window.focusSessions) window.focusSessions = [];
-                    window.focusSessions.push({
-                        task: currentFocusTask,
-                        duration: duration,
-                        timestamp: new Date().toLocaleTimeString()
-                    });
-                    updateFocusStats(window.focusSessions);
-                }
-            }
-        }
-
-        function handleFocusKeydown(e) {
-            if (e.key === 'Escape') exitFocusMode();
-        }
-
-        function startTimer() {
-            if (isTimerRunning) return;
-            isTimerRunning = true;
-            focusTimer = setInterval(() => {
-                focusSeconds--;
-                updateFocusDisplay();
-                if (focusSeconds <= 0) {
-                    clearInterval(focusTimer);
-                    alert('⏰ 专注时间结束！');
-                    isTimerRunning = false;
-                }
-            }, 1000);
-        }
-
-        function pauseTimer() {
-            clearInterval(focusTimer);
-            isTimerRunning = false;
-        }
-
-        function resetTimer() {
-            clearInterval(focusTimer);
-            focusSeconds = focusInitialSeconds;
-            isTimerRunning = false;
-            updateFocusDisplay();
-        }
-
-        function updateFocusDisplay() {
-            const minutes = Math.floor(focusSeconds / 60);
-            const seconds = focusSeconds % 60;
-            document.getElementById('focusTimer').textContent =
-                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-            if (window.focusSessions) {
-                const total = window.focusSessions.reduce((sum, s) => sum + s.duration, 0);
-                const currentSession = Math.round((focusInitialSeconds - focusSeconds) / 60);
-                document.getElementById('focusStatTotal').textContent = total;
-                document.getElementById('focusStatCurrent').textContent = currentSession;
-            }
-        }
-
-        function updateFocusStats(sessions) {
-            window.focusSessions = sessions;
-            const total = sessions.reduce((sum, s) => sum + s.duration, 0);
-            const avg = sessions.length > 0 ? Math.round(total / sessions.length) : 0;
-
-            document.getElementById('totalFocusTime').textContent = `${total} 分钟`;
-            document.getElementById('focusCount').textContent = `${sessions.length} 次`;
-            document.getElementById('avgFocusTime').textContent = `${avg} 分钟`;
-
-            const sessionsHTML = sessions.map(s =>
-                `<div style="padding:8px; background:#f0f0f0; margin:5px 0; border-radius:3px;">
-                🕐 ${s.timestamp} - ${s.task} (${s.duration}分钟)
-            </div>`
-            ).join('');
-            document.getElementById('focusSessions').innerHTML = sessionsHTML || '';
         }
 
         // 导出功能

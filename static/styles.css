@@ -313,63 +313,6 @@ textarea {
     background: #dc3545;
 }
 
-.focus-mode {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    color: white;
-    font-size: 48px;
-}
-
-.focus-mode.active {
-    display: flex;
-}
-
-.focus-timer {
-    font-size: 96px;
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-    margin: 30px 0;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-}
-
-.focus-task {
-    font-size: 32px;
-    margin-bottom: 40px;
-    text-align: center;
-}
-
-.focus-controls {
-    display: flex;
-    gap: 20px;
-    margin-top: 40px;
-}
-
-.focus-controls button {
-    padding: 15px 30px;
-    font-size: 18px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.focus-stats {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    border-radius: 10px;
-    margin-top: 40px;
-    font-size: 20px;
-}
-
 .export-btn {
     display: inline-flex;
     gap: 8px;
