@@ -1,5 +1,52 @@
 // LocalStorage 数据管理
 
+// 光影留痕 - 本地图片库配置
+// 说明:
+// 1) 将图片放入 photos/lighttrace/ 目录，命名为 img0001.jpg 之类
+// 2) 选择 "手动清单" 或 "自动清单"
+// 3) featured 为 true 的图片会出现在首页精选
+// 4) 若清单为空，将回退到浏览器 localStorage 模式
+
+// 手动清单（可选）
+window.LIGHTTRACE_LIBRARY = [
+    // Example:
+    // { id: 'img0001', src: 'photos/lighttrace/img0001.jpg', comment: 'Sunset glow', featured: true },
+];
+
+// 自动清单（可选）
+// count: 图片数量（1..count），自动生成 img0001.jpg
+// featuredIds: 需要精选的图片 id 列表
+window.LIGHTTRACE_AUTO = {
+    count: 13,
+    featuredIds: ['img0001', 'img0002', 'img0003', 'img0004',
+        'img0005', 'img0006', 'img0007', 'img0008', 'img0009', 'img0010',
+        'img0011', 'img0012', 'img0013'
+    ]
+};
+
+function buildAutoLibrary(config) {
+    if (!config || !config.count || config.count < 1) return [];
+    const featuredSet = new Set(config.featuredIds || []);
+    const items = [];
+    for (let i = 1; i <= config.count; i++) {
+        const id = `img${String(i).padStart(4, '0')}`;
+        items.push({
+            id,
+            src: `photos/lighttrace/${id}.jpg`,
+            comment: '',
+            featured: featuredSet.has(id)
+        });
+    }
+    return items;
+}
+
+const autoLibrary = buildAutoLibrary(window.LIGHTTRACE_AUTO);
+if (!window.LIGHTTRACE_LIBRARY || window.LIGHTTRACE_LIBRARY.length === 0) {
+    window.LIGHTTRACE_LIBRARY = autoLibrary;
+}
+
+window.FEATURED_LIGHTTRACE = (window.LIGHTTRACE_LIBRARY || []).filter(item => item && item.featured);
+
 const RECORDS_PREFIX = 'daily_record_';
 
 /**

@@ -38,6 +38,13 @@
     flex-wrap: wrap;
 }
 
+.gallery-hint {
+    text-align: center;
+    margin: 0 20px 10px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+}
+
 .upload-btn,
 .clear-btn {
     padding: 12px 24px;
@@ -50,6 +57,12 @@
     font-weight: bold;
     transition: all 0.3s ease;
     outline: none;
+}
+
+.upload-btn.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .upload-btn:hover,
@@ -166,6 +179,39 @@
 
 .gallery-empty p {
     margin: 0;
+}
+
+
+/* 分页 */
+
+.gallery-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px 40px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.gallery-pagination button {
+    padding: 8px 14px;
+    border: 1px solid rgba(255, 165, 0, 0.6);
+    background: rgba(255, 165, 0, 0.1);
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gallery-pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.gallery-pagination button:hover:not(:disabled) {
+    background: rgba(255, 165, 0, 0.2);
+    border-color: rgba(255, 165, 0, 0.9);
 }
 
 

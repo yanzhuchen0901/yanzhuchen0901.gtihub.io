@@ -33,19 +33,14 @@
 
     <div class="gallery-container">
         <div class="gallery-header">
-            <h1>光影留痕</h1>
+            <h1>光影留痕📸</h1>
             <p>记录生活中的精彩瞬间</p>
         </div>
-
-        <div class="gallery-controls">
-            <label for="imageUpload" class="upload-btn">
-                📤 上传图片
-                <input type="file" id="imageUpload" multiple accept="image/*" style="display: none;">
-            </label>
-            <button id="clearAllBtn" class="clear-btn">🗑️ 清空所有</button>
-        </div>
+        <div id="localLibraryHint" class="gallery-hint"></div>
 
         <div id="gallery" class="gallery-grid"></div>
+
+        <div id="galleryPagination" class="gallery-pagination"></div>
 
         <div class="gallery-empty" id="emptyMessage">
             <p>暂无图片，点击"上传图片"开始</p>
@@ -69,6 +64,7 @@
         </div>
     </div>
 
+    <script src="static/data.js"></script>
     <script src="static/gallery.js"></script>
 
 </body>

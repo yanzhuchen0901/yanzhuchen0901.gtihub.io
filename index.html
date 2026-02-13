@@ -18,6 +18,8 @@
 
 <body>
 
+    <canvas id="starfield" class="starfield-canvas" aria-hidden="true"></canvas>
+
     <header id="header">
         <div style="display:flex; align-items:center; gap:12px; width:100%; max-width:1100px; justify-content:space-between;">
             <div style="font-weight:bold; font-size:18px;">Chen.のhomepage</div>
@@ -76,21 +78,45 @@
 
     <script src="static/data.js"></script>
     <script>
-        // 精选光影照片数据 - 从 localStorage 中获取前几张
-        function getFeaturedPhotos() {
+        // 精选光影照片数据 - 优先读取本地图片库配置，否则回退到 localStorage
+        function getFeaturedPhotos(limit) {
+            const maxCount = limit || 10;
+            const featured = Array.isArray(window.FEATURED_LIGHTTRACE) ? window.FEATURED_LIGHTTRACE : [];
+            if (featured.length > 0) {
+                return featured.slice(0, maxCount).map(item => ({
+                    data: item.src,
+                    comment: item.comment || '',
+                    fileName: item.id || item.src || ''
+                }));
+            }
+
             try {
                 const stored = localStorage.getItem('gallery_images_v1');
                 const images = stored ? JSON.parse(stored) : [];
-                return images.slice(0, 6); // 显示前6张
+                return images.slice(0, maxCount); // 自动计算显示数量
             } catch (e) {
                 return [];
             }
         }
 
+        function getFeaturedPhotoLimit() {
+            const container = document.getElementById('featuredPhotosContainer');
+            if (!container) return 10;
+            const width = container.clientWidth;
+            if (!width) return 10;
+            const itemSize = 160;
+            const gap = 12;
+            const padding = 32;
+            const usable = Math.max(0, width - padding);
+            const columns = Math.max(1, Math.floor((usable + gap) / (itemSize + gap)));
+            return columns * 2;
+        }
+
         // 渲染精选光影
         function renderFeaturedPhotos() {
             const container = document.getElementById('featuredPhotosContainer');
-            const photos = getFeaturedPhotos();
+            const limit = getFeaturedPhotoLimit();
+            const photos = getFeaturedPhotos(limit);
 
             if (photos.length === 0) {
                 container.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.5); padding:40px;">暂无光影留痕，<a href="gallery.html" style="color:#ffa500;">去上传</a></div>';
@@ -116,6 +142,12 @@
 
             container.appendChild(scroll);
         }
+
+        let featuredResizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(featuredResizeTimer);
+            featuredResizeTimer = setTimeout(renderFeaturedPhotos, 150);
+        });
 
         // 妙笔生花 - 精选文章数据
         // 数据字段说明:
@@ -391,6 +423,8 @@
             setTimeout(tick, 400);
         })();
     </script>
+
+    <script src="starfield.js"></script>
 
 </body>
 

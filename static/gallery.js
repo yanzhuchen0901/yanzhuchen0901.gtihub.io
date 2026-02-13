@@ -4,18 +4,33 @@
 const GALLERY_KEY = 'gallery_images_v1';
 const MAX_IMAGES = 25; // 5x5网格
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const PAGE_SIZE = 25;
+
+const LOCAL_LIBRARY = Array.isArray(window.LIGHTTRACE_LIBRARY) ? window.LIGHTTRACE_LIBRARY : [];
+const USE_LOCAL_LIBRARY = LOCAL_LIBRARY.length > 0;
 
 let currentImageId = null;
 
 class Gallery {
     constructor() {
-        this.images = this.loadImages();
+        this.images = USE_LOCAL_LIBRARY ? this.loadLocalLibrary() : this.loadImages();
         this.init();
     }
 
     init() {
         this.attachEventListeners();
         this.render();
+    }
+
+    // 从本地图片库加载
+    loadLocalLibrary() {
+        return LOCAL_LIBRARY.filter(item => item && (item.src || item.file)).map(item => ({
+            id: item.id || item.src || item.file,
+            data: item.src || item.file,
+            comment: item.comment || '',
+            createdAt: item.createdAt || '',
+            fileName: item.id || item.src || item.file
+        }));
     }
 
     // 从 localStorage 加载图片
@@ -43,11 +58,15 @@ class Gallery {
     attachEventListeners() {
         // 上传图片
         const imageUpload = document.getElementById('imageUpload');
-        imageUpload.addEventListener('change', (e) => this.handleImageUpload(e));
+        if (!USE_LOCAL_LIBRARY) {
+            imageUpload.addEventListener('change', (e) => this.handleImageUpload(e));
+        }
 
         // 清空所有
         const clearAllBtn = document.getElementById('clearAllBtn');
-        clearAllBtn.addEventListener('click', () => this.clearAll());
+        if (!USE_LOCAL_LIBRARY) {
+            clearAllBtn.addEventListener('click', () => this.clearAll());
+        }
 
         // Modal 关闭
         const modal = document.getElementById('imageModal');
@@ -63,11 +82,36 @@ class Gallery {
 
         // 删除按钮
         const deleteBtn = document.getElementById('deleteBtn');
-        deleteBtn.addEventListener('click', () => this.deleteImage(currentImageId));
+        if (!USE_LOCAL_LIBRARY) {
+            deleteBtn.addEventListener('click', () => this.deleteImage(currentImageId));
+        }
 
         // 编辑评注
         const editCommentBtn = document.getElementById('editCommentBtn');
-        editCommentBtn.addEventListener('click', () => this.editComment(currentImageId));
+        if (!USE_LOCAL_LIBRARY) {
+            editCommentBtn.addEventListener('click', () => this.editComment(currentImageId));
+        }
+
+        // 本地图库模式提示与控件调整
+        if (USE_LOCAL_LIBRARY) {
+            const hint = document.getElementById('localLibraryHint');
+            if (hint) {
+                hint.textContent = '当前为本地图库模式：请将图片放入 photos/lighttrace/ 并在 static/data.js 中配置。';
+            }
+            if (imageUpload && imageUpload.parentElement) {
+                imageUpload.disabled = true;
+                imageUpload.parentElement.classList.add('is-disabled');
+            }
+            if (clearAllBtn) {
+                clearAllBtn.style.display = 'none';
+            }
+            if (deleteBtn) {
+                deleteBtn.style.display = 'none';
+            }
+            if (editCommentBtn) {
+                editCommentBtn.style.display = 'none';
+            }
+        }
     }
 
     // 处理图片上传
@@ -204,24 +248,39 @@ class Gallery {
     render() {
         const gallery = document.getElementById('gallery');
         const emptyMessage = document.getElementById('emptyMessage');
+        const pagination = document.getElementById('galleryPagination');
+
+        const allImages = this.images.slice();
+        let page = 1;
+        let totalPages = 1;
+        let pageImages = allImages;
+
+        if (USE_LOCAL_LIBRARY) {
+            totalPages = Math.max(1, Math.ceil(allImages.length / PAGE_SIZE));
+            page = this.getPageFromQuery();
+            if (page > totalPages) page = totalPages;
+            pageImages = allImages.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+        }
 
         // 显示/隐藏空状态提示
-        if (this.images.length === 0) {
+        if (pageImages.length === 0) {
             emptyMessage.style.display = 'block';
             gallery.innerHTML = '';
+            if (pagination) pagination.innerHTML = '';
             return;
         }
 
         emptyMessage.style.display = 'none';
         gallery.innerHTML = '';
 
-        // 创建 5x5 网格（25 个位置）
-        for (let i = 0; i < MAX_IMAGES; i++) {
+        // 创建网格
+        const cellCount = USE_LOCAL_LIBRARY ? pageImages.length : MAX_IMAGES;
+        for (let i = 0; i < cellCount; i++) {
             const cell = document.createElement('div');
             cell.className = 'gallery-cell';
 
-            if (i < this.images.length) {
-                const image = this.images[i];
+            if (i < pageImages.length) {
+                const image = pageImages[i];
 
                 // 图片缩略图
                 const img = document.createElement('img');
@@ -250,6 +309,43 @@ class Gallery {
 
             gallery.appendChild(cell);
         }
+
+        if (pagination) {
+            if (USE_LOCAL_LIBRARY && totalPages > 1) {
+                pagination.innerHTML = '';
+
+                const prevBtn = document.createElement('button');
+                prevBtn.textContent = '上一页';
+                prevBtn.disabled = page <= 1;
+                prevBtn.addEventListener('click', () => this.goToPage(page - 1));
+
+                const info = document.createElement('span');
+                info.textContent = `第 ${page} / ${totalPages} 页`;
+
+                const nextBtn = document.createElement('button');
+                nextBtn.textContent = '下一页';
+                nextBtn.disabled = page >= totalPages;
+                nextBtn.addEventListener('click', () => this.goToPage(page + 1));
+
+                pagination.appendChild(prevBtn);
+                pagination.appendChild(info);
+                pagination.appendChild(nextBtn);
+            } else {
+                pagination.innerHTML = '';
+            }
+        }
+    }
+
+    getPageFromQuery() {
+        const params = new URLSearchParams(window.location.search);
+        const raw = params.get('page') || '1';
+        const page = parseInt(raw, 10);
+        return Number.isNaN(page) || page < 1 ? 1 : page;
+    }
+
+    goToPage(page) {
+        const base = window.location.pathname;
+        window.location.href = `${base}?page=${page}`;
     }
 }
 
