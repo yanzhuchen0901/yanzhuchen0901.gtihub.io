@@ -23,7 +23,7 @@
             <div style="font-weight:bold; font-size:18px;">Chen.のhomepage</div>
             <div>
                 <a href="focus.html" class="nav-btn">专注计时器</a>
-                <a href="records.html" class="nav-btn">进入记录页</a>
+                <a href="gallery.html" class="nav-btn">光影留痕</a>
                 <a href="https://yanzhuchen0901.github.io/notes/" class="nav-btn" target="_blank" rel="noopener noreferrer">笔记</a>
             </div>
         </div>
@@ -31,7 +31,7 @@
 
     <section class="hero">
         <div class="hero-content">
-            <h1 class="greeting">🔥 欢迎来到Chen.のhomepage 😎</h1>
+            <h1 class="greeting">✨欢迎来到Chen.のhomepage🧤</h1>
             <div class="typed-wrapper">
                 <span id="typed" class="typed-text"></span>
                 <span class="cursor" aria-hidden="true"></span>
@@ -39,8 +39,21 @@
         </div>
     </section>
 
+    <!-- 精选光影留痕 - 横向滚动 -->
     <div class="content">
-        <h2 style="color:white; text-align:center; margin-top:30px;">打卡时间数（像 GitHub 贡献图）</h2>
+        <h2 style="color:white; text-align:center; margin-top:30px;">精选光影</h2>
+        <div id="featuredPhotosContainer" class="featured-photos-scroll"></div>
+    </div>
+
+    <!-- 妙笔生花 - 精选文章 -->
+    <div class="content">
+        <h2 style="color:white; text-align:center; margin-top:30px;">妙笔生花</h2>
+        <div id="articlesContainer" class="articles-grid"></div>
+    </div>
+
+    <!-- 更新频率统计 -->
+    <div class="content">
+        <h2 style="color:white; text-align:center; margin-top:30px;">更新频率统计</h2>
         <div id="heatmapContainer" class="heatmap"></div>
         <div class="heat-legend">
             <span>少</span>
@@ -55,13 +68,164 @@
         </div>
     </div>
 
-    <!-- 快速导航（滚动后显示） -->
+    <!-- 更新日志 - 时间线 -->
     <div class="content">
-        <h2 style="color:white; text-align:center; margin-top:30px;">快速导航</h2>
-        <div id="quicknavContainer" class="quicknav-container"></div>
+        <h2 style="color:white; text-align:center; margin-top:30px;">更新日志</h2>
+        <div id="changelog-container" class="changelog-timeline"></div>
     </div>
 
     <script src="static/data.js"></script>
+    <script>
+        // 精选光影照片数据 - 从 localStorage 中获取前几张
+        function getFeaturedPhotos() {
+            try {
+                const stored = localStorage.getItem('gallery_images_v1');
+                const images = stored ? JSON.parse(stored) : [];
+                return images.slice(0, 6); // 显示前6张
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // 渲染精选光影
+        function renderFeaturedPhotos() {
+            const container = document.getElementById('featuredPhotosContainer');
+            const photos = getFeaturedPhotos();
+
+            if (photos.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.5); padding:40px;">暂无光影留痕，<a href="gallery.html" style="color:#ffa500;">去上传</a></div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            const scroll = document.createElement('div');
+            scroll.className = 'photos-scroll-wrapper';
+
+            photos.forEach(photo => {
+                const item = document.createElement('div');
+                item.className = 'photo-item';
+                item.innerHTML = `
+                    <img src="${photo.data}" alt="" title="${photo.fileName || ''}">
+                    <div class="photo-comment">${photo.comment || ''}</div>
+                `;
+                item.addEventListener('click', () => {
+                    window.location.href = 'gallery.html';
+                });
+                scroll.appendChild(item);
+            });
+
+            container.appendChild(scroll);
+        }
+
+        // 妙笔生花 - 精选文章数据
+        // 数据字段说明:
+        // - id: 文章ID
+        // - title: 文章标题
+        // - description: 文章简述
+        // - image: 卡片显示的图片URL（缩略图）
+        // - link: 点击卡片后跳转的链接URL
+        // - comment: 评注/标签
+        const articles = [{
+            id: 1,
+            title: "python进阶讲义",
+            description: "基于Geminishen'cheng的一份py进阶讲义，主要针对CS61A的学习者",
+            image: "photos/photo1.webp",
+            link: "https://yanzhuchen0901.github.io/notes/#/computer-science/UCB%20CS61A/python",
+            comment: "学习天地"
+        }, {
+            id: 2,
+            title: "我们为什么要去游乐园",
+            description: "记录于高中去游乐园后的返程",
+            image: "photos/photo2.jpg",
+            link: "https://yanzhuchen0901.github.io/notes/#/English/CET-6/translation_and_writing1",
+            comment: "光阴随笔"
+        }, {
+            id: 3,
+            title: "CET-6正课笔记",
+            description: "记录六级正课的听力、阅读、写作笔记，持续更新中",
+            image: "photos/photo3.jpg",
+            link: "https://yanzhuchen0901.github.io/notes/#/English/CET-6/translation_and_writing1",
+            comment: "学习天地"
+        }];
+
+        // 更新日志数据
+        const changelog = [{
+            date: "2026-02-13",
+            title: "新增光影留痕画廊",
+            description: "支持图片上传、查看、评注功能，完整的前端实现"
+        }, {
+            date: "2026-02-12",
+            title: "优化更新频率统计",
+            description: "改进热力图展示，提升用户体验"
+        }, {
+            date: "2026-02-10",
+            title: "妙笔生花模块上线",
+            description: "精选文章卡片化展示，支持响应式布局"
+        }, {
+            date: "2026-02-08",
+            title: "主页大改版",
+            description: "移除标签页功能，重构导航菜单结构"
+        }, {
+            date: "2026-02-05",
+            title: "修复样式兼容性问题",
+            description: "改进移动端适配、优化深色主题"
+        }];
+
+        // 渲染妙笔生花
+        function renderArticles() {
+            const container = document.getElementById('articlesContainer');
+            container.innerHTML = '';
+            const grid = document.createElement('div');
+            grid.className = 'articles-grid';
+
+            articles.forEach(article => {
+                const card = document.createElement('div');
+                card.className = 'article-card';
+                card.style.cursor = 'pointer';
+                card.innerHTML = `
+                    <div class="article-image">
+                        <img src="${article.image}" alt="${article.title}">
+                    </div>
+                    <div class="article-content">
+                        <h3>${article.title}</h3>
+                        <p>${article.description}</p>
+                        <div class="article-comment">${article.comment}</div>
+                    </div>
+                `;
+                // 添加点击事件 - 跳转到文章链接
+                card.addEventListener('click', () => {
+                    window.open(article.link, '_blank');
+                });
+                grid.appendChild(card);
+            });
+
+            container.appendChild(grid);
+        }
+
+        // 渲染更新日志
+        function renderChangelog() {
+            const container = document.getElementById('changelog-container');
+            container.innerHTML = '';
+            const timeline = document.createElement('div');
+            timeline.className = 'timeline';
+
+            changelog.forEach((log, index) => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                item.innerHTML = `
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">${log.date}</div>
+                        <div class="timeline-title">${log.title}</div>
+                        <div class="timeline-description">${log.description}</div>
+                    </div>
+                `;
+                timeline.appendChild(item);
+            });
+
+            container.appendChild(timeline);
+        }
+    </script>
     <script>
         // 渲染简单的 GitHub 风格热图（最近 52 周）
         async function renderHeatmap() {
@@ -102,107 +266,71 @@
             }
         }
 
-        // 仅在用户滚动后显示热图容器与快速导航（与 header 一致的显示逻辑）
+        // 仅在用户滚动后显示热图（与 header 一致的显示逻辑）
         function setupScrollReveal() {
             const heat = document.getElementById('heatmapContainer');
-            const quick = document.getElementById('quicknavContainer');
             if (heat) heat.style.opacity = 0;
-            if (quick) quick.style.opacity = 0;
             window.addEventListener('scroll', () => {
                 const scrollY = window.scrollY;
                 const windowH = window.innerHeight;
                 let opacity = Math.min(1, Math.max(0, (scrollY - windowH / 2) / (windowH / 2)));
                 if (heat) heat.style.opacity = opacity;
-                if (quick) quick.style.opacity = opacity;
             });
         }
 
-        // --- 快速导航逻辑 ---
-        function getDomain(url) {
-            try {
-                const u = new URL(url);
-                return u.hostname;
-            } catch (e) {
-                return null;
+        renderFeaturedPhotos();
+
+        // 初始化示例数据到热力图（如果localStorage为空）
+        (function initSampleHeatmapData() {
+            const RECORDS_PREFIX = 'daily_record_';
+            let hasData = false;
+
+            // 检查是否已有数据
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith(RECORDS_PREFIX)) {
+                    hasData = true;
+                    break;
+                }
             }
-        }
 
-        function loadQuickNav() {
-            const links = getQuickNav();
-            renderQuickNav(links);
-        }
+            // 如果没有数据，添加示例数据
+            if (!hasData) {
+                const today = new Date();
+                // 添加最近30天的示例数据
+                for (let i = 0; i < 30; i++) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() - i);
+                    const y = date.getFullYear();
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const d = String(date.getDate()).padStart(2, '0');
+                    const key = `${RECORDS_PREFIX}${y}-${m}-${d}`;
 
-        function renderQuickNav(links) {
-            const container = document.getElementById('quicknavContainer');
-            container.innerHTML = '';
-            const grid = document.createElement('div');
-            grid.className = 'quicknav-grid';
+                    // 随机生成活跃度（0-6）
+                    const activity = Math.floor(Math.random() * 6);
 
-            // render links
-            links.forEach((item, idx) => {
-                const cell = document.createElement('a');
-                cell.className = 'quicknav-item';
-                cell.href = item.url;
-                cell.target = '_blank';
-                cell.rel = 'noopener noreferrer';
-
-                const img = document.createElement('img');
-                img.className = 'quicknav-icon';
-                img.src = item.icon || (`https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(item.url)}`);
-                img.alt = item.title || item.url;
-
-                const label = document.createElement('div');
-                label.className = 'quicknav-label';
-                label.textContent = item.title || getDomain(item.url) || item.url;
-
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'quicknav-remove';
-                removeBtn.title = '删除';
-                removeBtn.textContent = '✕';
-                removeBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    links.splice(idx, 1);
-                    saveQuickNav(links);
-                    renderQuickNav(links);
-                });
-
-                cell.appendChild(img);
-                cell.appendChild(label);
-                cell.appendChild(removeBtn);
-                grid.appendChild(cell);
-            });
-
-            // add-slot (保留一个位置作为添加按钮)
-            const addCell = document.createElement('div');
-            addCell.className = 'quicknav-item add-item';
-            addCell.title = '添加网址';
-            addCell.addEventListener('click', () => {
-                const url = prompt('输入要添加的网址（含 https://)');
-                if (!url) return;
-                const title = prompt('可选：为该链接设置标题（留空则使用域名）') || '';
-                const domain = getDomain(url);
-                const icon = domain ? `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(url)}` : '';
-                links.push({
-                    url,
-                    title,
-                    icon
-                });
-                saveQuickNav(links);
-                renderQuickNav(links);
-            });
-            const plus = document.createElement('div');
-            plus.className = 'add-plus';
-            plus.textContent = '+';
-            addCell.appendChild(plus);
-            grid.appendChild(addCell);
-
-            container.appendChild(grid);
-        }
+                    if (activity > 0) {
+                        const sampleData = {
+                            date: `${y}-${m}-${d}`,
+                            keywords: activity > 2 ? ["更新"] : [],
+                            today_done: activity > 1 ? "完成了一些工作" : "",
+                            tomorrow_plan: activity > 3 ? ["继续努力"] : [],
+                            insights: activity > 3 ? "有所收获" : "",
+                            todos: activity > 2 ? ["任务1"] : [],
+                            focus_sessions: activity > 1 ? [{
+                                duration: 30
+                            }] : []
+                        };
+                        localStorage.setItem(key, JSON.stringify(sampleData));
+                    }
+                }
+            }
+        })();
 
         renderHeatmap();
         setupScrollReveal();
-        loadQuickNav();
+        renderArticles();
+        renderChangelog();
 
         // 初始化 header 为隐藏状态
         const header = document.getElementById("header");
@@ -230,7 +358,7 @@
         (function() {
             const el = document.getElementById('typed');
             if (!el) return;
-            const phrases = ["陈 彦竹🎍", "Yanzhu Chen", "📖ZJUer", "💻CS Learner"];
+            const phrases = ["陈彦竹", "Yanzhu Chen🎍", "📖ZJUer", "💻CS Learner", "both conter strike & computer science", "Coffee☕ & Pingpong🏓 Lover", "Billiards experienced🎱"];
             let pi = 0,
                 ci = 0,
                 deleting = false;

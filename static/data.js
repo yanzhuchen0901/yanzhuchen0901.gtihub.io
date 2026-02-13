@@ -1,7 +1,6 @@
 // LocalStorage 数据管理
 
 const RECORDS_PREFIX = 'daily_record_';
-const QUICKNAV_KEY = 'quicknav_links_v1';
 
 /**
  * 获取指定日期的记录
@@ -85,32 +84,6 @@ function getHeatmapData() {
 }
 
 /**
- * 获取快速导航链接
- */
-function getQuickNav() {
-    const stored = localStorage.getItem(QUICKNAV_KEY);
-
-    try {
-        return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-        console.error('Failed to parse quicknav:', e);
-        return [];
-    }
-}
-
-/**
- * 保存快速导航链接
- */
-function saveQuickNav(links) {
-    try {
-        localStorage.setItem(QUICKNAV_KEY, JSON.stringify(links));
-    } catch (e) {
-        console.error('Failed to save quicknav:', e);
-        alert('⚠️ 保存失败：浏览器存储空间不足');
-    }
-}
-
-/**
  * 导出所有记录为JSON（备份功能）
  */
 function exportAllRecordsAsJSON() {
@@ -174,7 +147,7 @@ function clearAllData() {
 
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key && (key.startsWith(RECORDS_PREFIX) || key === QUICKNAV_KEY)) {
+            if (key && key.startsWith(RECORDS_PREFIX)) {
                 keysToDelete.push(key);
             }
         }
