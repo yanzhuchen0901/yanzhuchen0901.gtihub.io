@@ -38,31 +38,29 @@
     transform: translateY(-2px);
 }
 
+
 /* 移动端适配 */
+
 @media (max-width: 768px) {
     #header {
         height: auto;
         padding: 12px 0;
     }
-    
-    #header > div {
+    #header>div {
         flex-wrap: wrap;
         gap: 8px;
         padding: 0 12px;
     }
-    
-    #header > div > div:first-child {
+    #header>div>div:first-child {
         width: 100%;
         font-size: 16px;
     }
-    
-    #header > div > div:nth-child(2) {
+    #header>div>div:nth-child(2) {
         width: 100%;
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
     }
-    
     .nav-btn {
         padding: 6px 10px;
         font-size: 13px;
