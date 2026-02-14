@@ -515,7 +515,7 @@ textarea {
 
 .article-image {
     width: 100%;
-    height: 200px;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.3);
 }
@@ -523,8 +523,10 @@ textarea {
 .article-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
     transition: transform 0.3s ease;
+    background: rgba(0, 0, 0, 0.5);
 }
 
 .article-card:hover .article-image img {
@@ -646,9 +648,37 @@ textarea {
 /* 响应式布局 */
 
 @media (max-width: 768px) {
+    .content {
+        padding: 80px 16px 40px 16px;
+    }
+    
     .articles-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 8px;
     }
+    
+    .article-content {
+        padding: 12px;
+    }
+    
+    .article-content h3 {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+    
+    .article-content p {
+        font-size: 12px;
+        margin-bottom: 8px;
+        min-height: 32px;
+    }
+    
+    .article-comment {
+        font-size: 10px;
+        padding-top: 8px;
+        margin-top: 8px;
+    }
+    
     .timeline::before {
         left: 8px;
     }
@@ -663,6 +693,19 @@ textarea {
         width: 100%;
         margin-left: 30px;
     }
+    .featured-photos-scroll {
+        overflow: hidden;
+    }
+    
+    .photos-scroll-wrapper {
+        grid-auto-flow: row;
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-columns: auto;
+        grid-template-rows: repeat(2, 160px);
+        padding: 12px;
+        gap: 10px;
+    }
+    
     .photo-item {
         flex: 0 0 160px;
     }

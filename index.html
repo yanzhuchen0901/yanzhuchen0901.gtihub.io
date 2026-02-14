@@ -101,15 +101,19 @@
 
         function getFeaturedPhotoLimit() {
             const container = document.getElementById('featuredPhotosContainer');
-            if (!container) return 10;
+            if (!container) return 12;
             const width = container.clientWidth;
-            if (!width) return 10;
+            if (!width) return 12;
+            // 手机端显示4张（2行2列）
+            if (width < 768) {
+                return 4;
+            }
             const itemSize = 160;
             const gap = 12;
             const padding = 32;
             const usable = Math.max(0, width - padding);
             const columns = Math.max(1, Math.floor((usable + gap) / (itemSize + gap)));
-            return columns * 2;
+            return Math.max(12, columns * 2);
         }
 
         // 渲染精选光影
